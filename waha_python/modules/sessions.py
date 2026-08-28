@@ -2,7 +2,8 @@
 Sessions module for WAHA Python client
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from ..base_module import BaseModule
 
 
@@ -13,7 +14,7 @@ class SessionsModule(BaseModule):
     A session represents a WhatsApp account connected to WAHA
     """
 
-    def list(self, all_sessions: bool = False) -> List[Dict[str, Any]]:
+    async def list(self, all_sessions: bool = False) -> list[dict[str, Any]]:
         """
         List all sessions
 
@@ -33,9 +34,9 @@ class SessionsModule(BaseModule):
                 all_sessions = client.sessions.list(all_sessions=True)
         """
         params = {"all": all_sessions} if all_sessions else None
-        return self.get("/api/sessions", params=params)
+        return await self.client.get("/api/sessions", params=params)
 
-    def get(self, session_name: str) -> Dict[str, Any]:
+    async def get(self, session_name: str) -> dict[str, Any]:
         """
         Get session information
 
@@ -50,14 +51,14 @@ class SessionsModule(BaseModule):
 
                 session = client.sessions.get("default")
         """
-        return self.request("GET", f"/api/sessions/{session_name}")
+        return await self.request("GET", f"/api/sessions/{session_name}")
 
-    def create(
+    async def create(
         self,
-        name: Optional[str] = None,
-        config: Optional[Dict[str, Any]] = None,
+        name: str | None = None,
+        config: dict[str, Any] | None = None,
         start: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a new session
 
@@ -84,7 +85,7 @@ class SessionsModule(BaseModule):
                     start=False
                 )
         """
-        data: Dict[str, Any] = {}
+        data: dict[str, Any] = {}
         if name:
             data["name"] = name
         if config:
@@ -92,11 +93,11 @@ class SessionsModule(BaseModule):
         if not start:
             data["start"] = False
 
-        return self.post("/api/sessions", json_data=data)
+        return await self.post("/api/sessions", json_data=data)
 
-    def update(
-        self, session_name: str, config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def update(
+        self, session_name: str, config: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Update session configuration
 
@@ -116,9 +117,9 @@ class SessionsModule(BaseModule):
                 )
         """
         data = {"name": session_name, "config": config}
-        return self.request("PUT", f"/api/sessions/{session_name}", json_data=data)
+        return await self.request("PUT", f"/api/sessions/{session_name}", json_data=data)
 
-    def start(self, session_name: str) -> Dict[str, Any]:
+    async def start(self, session_name: str) -> dict[str, Any]:
         """
         Start a session
 
@@ -133,9 +134,9 @@ class SessionsModule(BaseModule):
 
                 session = client.sessions.start("my_session")
         """
-        return self.post(f"/api/sessions/{session_name}/start")
+        return await self.post(f"/api/sessions/{session_name}/start")
 
-    def stop(self, session_name: str) -> Dict[str, Any]:
+    async def stop(self, session_name: str) -> dict[str, Any]:
         """
         Stop a session
 
@@ -150,9 +151,9 @@ class SessionsModule(BaseModule):
 
                 session = client.sessions.stop("my_session")
         """
-        return self.post(f"/api/sessions/{session_name}/stop")
+        return await self.post(f"/api/sessions/{session_name}/stop")
 
-    def restart(self, session_name: str) -> Dict[str, Any]:
+    async def restart(self, session_name: str) -> dict[str, Any]:
         """
         Restart a session
 
@@ -167,9 +168,9 @@ class SessionsModule(BaseModule):
 
                 session = client.sessions.restart("my_session")
         """
-        return self.post(f"/api/sessions/{session_name}/restart")
+        return await self.post(f"/api/sessions/{session_name}/restart")
 
-    def logout(self, session_name: str) -> Dict[str, Any]:
+    async def logout(self, session_name: str) -> dict[str, Any]:
         """
         Logout from a session
 
@@ -184,9 +185,9 @@ class SessionsModule(BaseModule):
 
                 result = client.sessions.logout("my_session")
         """
-        return self.post(f"/api/sessions/{session_name}/logout")
+        return await self.post(f"/api/sessions/{session_name}/logout")
 
-    def delete(self, session_name: str) -> Dict[str, Any]:
+    async def delete(self, session_name: str) -> dict[str, Any]:
         """
         Delete a session
 
@@ -201,9 +202,9 @@ class SessionsModule(BaseModule):
 
                 result = client.sessions.delete("my_session")
         """
-        return self.request("DELETE", f"/api/sessions/{session_name}")
+        return await self.request("DELETE", f"/api/sessions/{session_name}")
 
-    def get_me(self, session_name: str) -> Optional[Dict[str, Any]]:
+    async def get_me(self, session_name: str) -> dict[str, Any] | None:
         """
         Get information about the associated account for the session
 
@@ -220,9 +221,9 @@ class SessionsModule(BaseModule):
                 if me:
                     print(f"Logged in as: {me['pushName']}")
         """
-        return self.get(f"/api/sessions/{session_name}/me")
+        return await self.client.get(f"/api/sessions/{session_name}/me")
 
-    def get_qr(
+    async def get_qr(
         self,
         session_name: str,
         format: str = "image",
@@ -256,17 +257,17 @@ class SessionsModule(BaseModule):
 
         if accept_json or format == "raw":
             # Request JSON response
-            response = self.request(
+            response = await self.request(
                 "GET", endpoint, params=params
             )
             return response
 
         # Request binary image
-        return self.client.request("GET", endpoint, params=params)
+        return await self.client.request("GET", endpoint, params=params)
 
-    def request_code(
+    async def request_code(
         self, session_name: str, phone_number: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Request authentication code for pairing
 
@@ -284,9 +285,9 @@ class SessionsModule(BaseModule):
                 print(f"Pairing code: {result['code']}")
         """
         data = {"phoneNumber": phone_number}
-        return self.post(f"/api/{session_name}/auth/request-code", json_data=data)
+        return await self.post(f"/api/{session_name}/auth/request-code", json_data=data)
 
-    def get_screenshot(
+    async def get_screenshot(
         self, session_name: str, accept_json: bool = False
     ) -> Any:
         """
@@ -308,15 +309,15 @@ class SessionsModule(BaseModule):
                 # Get screenshot as base64
                 screenshot_data = client.sessions.get_screenshot("default", accept_json=True)
         """
-        endpoint = f"/api/screenshot"
+        endpoint = "/api/screenshot"
         params = {"session": session_name}
 
         if accept_json:
             headers = {"Accept": "application/json"}
-            response = self.client.request(
+            response = await self.client.request(
                 "GET", endpoint, params=params, headers=headers
             )
             return response
 
-        return self.client.request("GET", endpoint, params=params)
+        return await self.client.request("GET", endpoint, params=params)
 

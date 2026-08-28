@@ -2,7 +2,9 @@
 Channels module for WAHA Python client
 """
 
-from typing import List, Dict, Any, Optional
+import builtins
+from typing import Any
+
 from ..base_module import BaseModule
 
 
@@ -11,7 +13,7 @@ class ChannelsModule(BaseModule):
     Module for managing WhatsApp Channels
     """
 
-    def list(self, session: str) -> List[Dict[str, Any]]:
+    async def list(self, session: str) -> list[dict[str, Any]]:
         """
         List all channels
 
@@ -26,9 +28,9 @@ class ChannelsModule(BaseModule):
 
                 channels = client.channels.list("default")
         """
-        return self.get(f"/api/{session}/channels")
+        return await self.client.get(f"/api/{session}/channels")
 
-    def get(self, session: str, channel_id: str) -> Dict[str, Any]:
+    async def get(self, session: str, channel_id: str) -> dict[str, Any]:
         """
         Get a specific channel
 
@@ -44,11 +46,11 @@ class ChannelsModule(BaseModule):
 
                 channel = client.channels.get("default", "channel_id_here")
         """
-        return self.request("GET", f"/api/{session}/channels/{channel_id}")
+        return await self.request("GET", f"/api/{session}/channels/{channel_id}")
 
-    def create(
-        self, session: str, name: str, description: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def create(
+        self, session: str, name: str, description: str | None = None
+    ) -> dict[str, Any]:
         """
         Create a new channel
 
@@ -65,13 +67,13 @@ class ChannelsModule(BaseModule):
 
                 channel = client.channels.create("default", "My Channel")
         """
-        data: Dict[str, Any] = {"name": name}
+        data: dict[str, Any] = {"name": name}
         if description:
             data["description"] = description
 
-        return self.post(f"/api/{session}/channels", json_data=data)
+        return await self.post(f"/api/{session}/channels", json_data=data)
 
-    def delete(self, session: str, channel_id: str) -> Dict[str, Any]:
+    async def delete(self, session: str, channel_id: str) -> dict[str, Any]:
         """
         Delete a channel
 
@@ -87,11 +89,11 @@ class ChannelsModule(BaseModule):
 
                 result = client.channels.delete("default", "channel_id_here")
         """
-        return self.request("DELETE", f"/api/{session}/channels/{channel_id}")
+        return await self.request("DELETE", f"/api/{session}/channels/{channel_id}")
 
-    def get_messages(
-        self, session: str, channel_id: str, limit: Optional[int] = None
-    ) -> List[Dict[str, Any]]:
+    async def get_messages(
+        self, session: str, channel_id: str, limit: int | None = None
+    ) -> builtins.list[dict[str, Any]]:
         """
         Get messages from a channel
 
@@ -112,7 +114,7 @@ class ChannelsModule(BaseModule):
         if limit is not None:
             params["limit"] = limit
 
-        return self.get(
+        return await self.client.get(
             f"/api/{session}/chats/{channel_id}/messages",
             params=params if params else None,
         )

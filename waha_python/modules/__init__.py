@@ -2,14 +2,14 @@
 WAHA Python Modules
 """
 
-from .sessions import SessionsModule
-from .messages import MessagesModule
+from .channels import ChannelsModule
 from .chats import ChatsModule
 from .contacts import ContactsModule
 from .groups import GroupsModule
-from .status import StatusModule
+from .messages import MessagesModule
 from .profile import ProfileModule
-from .channels import ChannelsModule
+from .sessions import SessionsModule
+from .status import StatusModule
 
 __all__ = [
     "SessionsModule",

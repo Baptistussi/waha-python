@@ -28,14 +28,14 @@ Example:
         )
 
         # Send a text message
-        result = client.messages.send_text(
+        result = await client.messages.send_text(
             session="default",
             chat_id="1234567890@c.us",
             text="Hello, World!"
         )
 
         # Get all sessions
-        sessions = client.sessions.list()
+        sessions = await client.sessions.list()
 """
 
 __version__ = "1.0.0"
@@ -44,12 +44,12 @@ __license__ = "MIT"
 
 from .client import WAHAClient
 from .exceptions import (
-    WAHAClientError,
     WAHAAuthenticationError,
-    WAHASessionError,
+    WAHAClientError,
     WAHANotFoundError,
     WAHARateLimitError,
     WAHAServerError,
+    WAHASessionError,
 )
 
 __all__ = [

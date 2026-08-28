@@ -2,7 +2,8 @@
 Status module for WAHA Python client
 """
 
-from typing import Dict, Any, Optional, Union
+from typing import Any
+
 from ..base_module import BaseModule
 
 
@@ -11,9 +12,9 @@ class StatusModule(BaseModule):
     Module for managing WhatsApp Status (Stories)
     """
 
-    def send_text(
+    async def send_text(
         self, session: str, text: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a text status
 
@@ -30,11 +31,11 @@ class StatusModule(BaseModule):
                 result = client.status.send_text("default", "My status update")
         """
         data = {"text": text}
-        return self.post(f"/api/{session}/status/text", json_data=data)
+        return await self.post(f"/api/{session}/status/text", json_data=data)
 
-    def send_image(
-        self, session: str, file: Union[Dict[str, Any], str], caption: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def send_image(
+        self, session: str, file: dict[str, Any] | str, caption: str | None = None
+    ) -> dict[str, Any]:
         """
         Send an image status
 
@@ -63,15 +64,15 @@ class StatusModule(BaseModule):
                 mimetype = mimetypes.guess_type(file)[0] or "image/jpeg"
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
-        data: Dict[str, Any] = {"file": file}
+        data: dict[str, Any] = {"file": file}
         if caption:
             data["caption"] = caption
 
-        return self.post(f"/api/{session}/status/image", json_data=data)
+        return await self.post(f"/api/{session}/status/image", json_data=data)
 
-    def send_voice(
-        self, session: str, file: Union[Dict[str, Any], str]
-    ) -> Dict[str, Any]:
+    async def send_voice(
+        self, session: str, file: dict[str, Any] | str
+    ) -> dict[str, Any]:
         """
         Send a voice status
 
@@ -100,11 +101,11 @@ class StatusModule(BaseModule):
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
         data = {"file": file}
-        return self.post(f"/api/{session}/status/voice", json_data=data)
+        return await self.post(f"/api/{session}/status/voice", json_data=data)
 
-    def send_video(
-        self, session: str, file: Union[Dict[str, Any], str], caption: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def send_video(
+        self, session: str, file: dict[str, Any] | str, caption: str | None = None
+    ) -> dict[str, Any]:
         """
         Send a video status
 
@@ -133,15 +134,15 @@ class StatusModule(BaseModule):
                 mimetype = mimetypes.guess_type(file)[0] or "video/mp4"
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
-        data: Dict[str, Any] = {"file": file}
+        data: dict[str, Any] = {"file": file}
         if caption:
             data["caption"] = caption
 
-        return self.post(f"/api/{session}/status/video", json_data=data)
+        return await self.post(f"/api/{session}/status/video", json_data=data)
 
-    def delete(
+    async def delete(
         self, session: str, message_id: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Delete a status
 
@@ -158,9 +159,9 @@ class StatusModule(BaseModule):
                 result = client.status.delete("default", "message_id_here")
         """
         data = {"messageId": message_id}
-        return self.post(f"/api/{session}/status/delete", json_data=data)
+        return await self.post(f"/api/{session}/status/delete", json_data=data)
 
-    def get_new_message_id(self, session: str) -> Dict[str, Any]:
+    async def get_new_message_id(self, session: str) -> dict[str, Any]:
         """
         Get new status message ID
 
@@ -175,5 +176,5 @@ class StatusModule(BaseModule):
 
                 message_id = client.status.get_new_message_id("default")
         """
-        return self.get(f"/api/{session}/status/new-message-id")
+        return await self.get(f"/api/{session}/status/new-message-id")
 

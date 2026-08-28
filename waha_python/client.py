@@ -2,32 +2,32 @@
 Main WAHA Client implementation
 """
 
-import requests
-from typing import Optional, Dict, Any, Union
+from typing import Any
+
+import httpx
+
 from .exceptions import (
-    WAHAClientError,
     WAHAAuthenticationError,
+    WAHAClientError,
     WAHANotFoundError,
     WAHARateLimitError,
     WAHAServerError,
 )
-
-# Import sub-modules
-from .modules.sessions import SessionsModule
-from .modules.messages import MessagesModule
+from .modules.channels import ChannelsModule
 from .modules.chats import ChatsModule
 from .modules.contacts import ContactsModule
 from .modules.groups import GroupsModule
-from .modules.status import StatusModule
+from .modules.messages import MessagesModule
 from .modules.profile import ProfileModule
-from .modules.channels import ChannelsModule
+from .modules.sessions import SessionsModule
+from .modules.status import StatusModule
 
 
 class WAHAClient:
     """
     WAHA (WhatsApp HTTP API) Python Client
 
-    This is the main client class that provides a high-level interface
+    This is the main client class that provides a high-level async interface
     to interact with the WAHA server.
 
     Args:
@@ -40,24 +40,23 @@ class WAHAClient:
 
             from waha_python import WAHAClient
 
-            client = WAHAClient(
+            async with WAHAClient(
                 base_url="http://localhost:3000",
                 api_key="your-api-key-here"
-            )
-
-            # Send a text message
-            result = client.messages.send_text(
-                session="default",
-                chat_id="1234567890@c.us",
-                text="Hello, World!"
-            )
+            ) as client:
+                # Send a text message
+                result = await client.messages.send_text(
+                    session="default",
+                    chat_id="1234567890@c.us",
+                    text="Hello, World!"
+                )
     """
 
     def __init__(
         self,
         base_url: str = "http://localhost:3000",
-        api_key: Optional[str] = None,
-        timeout: int = 30,
+        api_key: str | None = None,
+        timeout: float = 30.0,
     ):
         """
         Initialize the WAHA client
@@ -71,11 +70,19 @@ class WAHAClient:
         self.api_key = api_key
         self.timeout = timeout
 
-        # Initialize session
-        self._session = requests.Session()
-        self._setup_session()
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        if self.api_key:
+            headers["X-Api-Key"] = self.api_key
 
-        # Initialize sub-modules
+        self._client = httpx.AsyncClient(
+            base_url=self.base_url,
+            headers=headers,
+            timeout=httpx.Timeout(timeout),
+        )
+
         self.sessions = SessionsModule(self)
         self.messages = MessagesModule(self)
         self.chats = ChatsModule(self)
@@ -85,26 +92,14 @@ class WAHAClient:
         self.profile = ProfileModule(self)
         self.channels = ChannelsModule(self)
 
-    def _setup_session(self):
-        """Setup the requests session with default headers and auth"""
-        self._session.headers.update(
-            {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            }
-        )
-
-        if self.api_key:
-            self._session.headers["X-Api-Key"] = self.api_key
-
-    def request(
+    async def request(
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        json_data: Optional[Dict[str, Any]] = None,
-        **kwargs
-    ) -> Union[Dict[str, Any], Any]:
+        params: dict[str, Any] | None = None,
+        json_data: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any] | Any:
         """
         Make a request to the WAHA API
 
@@ -113,7 +108,7 @@ class WAHAClient:
             endpoint: API endpoint (e.g., "/api/sessions")
             params: URL parameters
             json_data: JSON body data
-            **kwargs: Additional arguments for requests
+            **kwargs: Additional arguments for httpx
 
         Returns:
             Response data
@@ -125,27 +120,23 @@ class WAHAClient:
             WAHAServerError: If server returns an error
             WAHAClientError: For other errors
         """
-        url = f"{self.base_url}{endpoint}"
-        timeout = kwargs.pop("timeout", self.timeout)
-
         try:
-            response = self._session.request(
+            response = await self._client.request(
                 method=method,
-                url=url,
+                url=endpoint,
                 params=params,
                 json=json_data,
-                timeout=timeout,
-                **kwargs
+                **kwargs,
             )
             return self._handle_response(response)
-        except requests.exceptions.Timeout as e:
-            raise WAHAClientError(f"Request timeout: {e}")
-        except requests.exceptions.ConnectionError as e:
-            raise WAHAClientError(f"Connection error: {e}")
-        except requests.exceptions.RequestException as e:
-            raise WAHAClientError(f"Request failed: {e}")
+        except httpx.TimeoutException as e:
+            raise WAHAClientError(f"Request timeout: {e}") from e
+        except httpx.ConnectError as e:
+            raise WAHAClientError(f"Connection error: {e}") from e
+        except httpx.HTTPError as e:
+            raise WAHAClientError(f"Request failed: {e}") from e
 
-    def _handle_response(self, response: requests.Response) -> Union[Dict[str, Any], Any]:
+    def _handle_response(self, response: httpx.Response) -> dict[str, Any] | Any:
         """
         Handle the HTTP response
 
@@ -161,7 +152,6 @@ class WAHAClient:
             WAHARateLimitError: If rate limit is exceeded (429)
             WAHAServerError: If server returns an error (5xx)
         """
-        # Handle different status codes
         if response.status_code == 401:
             raise WAHAAuthenticationError(
                 "Authentication failed. Please check your API key."
@@ -171,17 +161,10 @@ class WAHAClient:
         elif response.status_code == 429:
             raise WAHARateLimitError("Rate limit exceeded. Please try again later.")
         elif response.status_code >= 500:
-            error_msg = "Server error"
-            try:
-                error_data = response.json()
-                error_msg = error_data.get("message", error_msg)
-            except:
-                pass
+            error_msg = self._error_message(response) or "Server error"
             raise WAHAServerError(f"{error_msg} (Status: {response.status_code})")
 
-        # Handle successful responses
         if response.status_code in [200, 201, 204]:
-            # Handle different content types
             content_type = response.headers.get("Content-Type", "")
             if "application/json" in content_type:
                 return response.json()
@@ -190,43 +173,63 @@ class WAHAClient:
             else:
                 return response.text
 
-        # Handle other error codes
         if response.status_code >= 400:
-            error_msg = "Unknown error"
-            try:
-                error_data = response.json()
-                error_msg = error_data.get("message", error_msg)
-            except:
+            error_msg = self._error_message(response)
+            if not error_msg:
                 error_msg = response.text
             raise WAHAClientError(f"{error_msg} (Status: {response.status_code})")
 
         return response.text
 
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None, **kwargs) -> Union[Dict[str, Any], Any]:
+    @staticmethod
+    def _error_message(response: httpx.Response) -> str:
+        """Best-effort extraction of an error message from a response body."""
+        try:
+            data = response.json()
+        except ValueError:
+            return ""
+        if isinstance(data, dict) and data.get("message"):
+            return data["message"]
+        return ""
+
+    async def get(
+        self, endpoint: str, params: dict[str, Any] | None = None, **kwargs: Any
+    ) -> dict[str, Any] | Any:
         """Make a GET request"""
-        return self.request("GET", endpoint, params=params, **kwargs)
+        return await self.request("GET", endpoint, params=params, **kwargs)
 
-    def post(self, endpoint: str, json_data: Optional[Dict[str, Any]] = None, **kwargs) -> Union[Dict[str, Any], Any]:
+    async def post(
+        self,
+        endpoint: str,
+        json_data: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any] | Any:
         """Make a POST request"""
-        return self.request("POST", endpoint, json_data=json_data, **kwargs)
+        return await self.request("POST", endpoint, json_data=json_data, **kwargs)
 
-    def put(self, endpoint: str, json_data: Optional[Dict[str, Any]] = None, **kwargs) -> Union[Dict[str, Any], Any]:
+    async def put(
+        self,
+        endpoint: str,
+        json_data: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any] | Any:
         """Make a PUT request"""
-        return self.request("PUT", endpoint, json_data=json_data, **kwargs)
+        return await self.request("PUT", endpoint, json_data=json_data, **kwargs)
 
-    def delete(self, endpoint: str, **kwargs) -> Union[Dict[str, Any], Any]:
+    async def delete(
+        self, endpoint: str, **kwargs: Any
+    ) -> dict[str, Any] | Any:
         """Make a DELETE request"""
-        return self.request("DELETE", endpoint, **kwargs)
+        return await self.request("DELETE", endpoint, **kwargs)
 
-    def close(self):
+    async def close(self) -> None:
         """Close the client session"""
-        self._session.close()
+        await self._client.aclose()
 
-    def __enter__(self):
-        """Context manager entry"""
+    async def __aenter__(self) -> "WAHAClient":
+        """Async context manager entry"""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit"""
-        self.close()
-
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Async context manager exit"""
+        await self.close()

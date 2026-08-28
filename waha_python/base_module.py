@@ -2,7 +2,7 @@
 Base module class for WAHA Python client
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .client import WAHAClient
@@ -24,32 +24,39 @@ class BaseModule:
         """
         self.client = client
 
-    def request(self, *args, **kwargs):
-        """
-        Proxy method to client request
+    async def request(
+        self,
+        method: str,
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+        json_data: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any] | Any:
+        """Proxy method to client request"""
+        return await self.client.request(
+            method, endpoint, params=params, json_data=json_data, **kwargs
+        )
 
-        Args:
-            *args: Positional arguments
-            **kwargs: Keyword arguments
-
-        Returns:
-            Response data
-        """
-        return self.client.request(*args, **kwargs)
-
-    def get(self, *args, **kwargs):
+    async def get(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[str, Any] | Any:
         """Proxy method to client get"""
-        return self.client.get(*args, **kwargs)
+        return await self.client.get(*args, **kwargs)
 
-    def post(self, *args, **kwargs):
+    async def post(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[str, Any] | Any:
         """Proxy method to client post"""
-        return self.client.post(*args, **kwargs)
+        return await self.client.post(*args, **kwargs)
 
-    def put(self, *args, **kwargs):
+    async def put(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[str, Any] | Any:
         """Proxy method to client put"""
-        return self.client.put(*args, **kwargs)
+        return await self.client.put(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
+    async def delete(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[str, Any] | Any:
         """Proxy method to client delete"""
-        return self.client.delete(*args, **kwargs)
-
+        return await self.client.delete(*args, **kwargs)

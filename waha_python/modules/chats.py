@@ -2,7 +2,9 @@
 Chats module for WAHA Python client
 """
 
-from typing import List, Dict, Any, Optional
+import builtins
+from typing import Any
+
 from ..base_module import BaseModule
 
 
@@ -11,12 +13,12 @@ class ChatsModule(BaseModule):
     Module for managing WhatsApp chats
     """
 
-    def list(
+    async def list(
         self,
         session: str,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Get all chats
 
@@ -39,9 +41,9 @@ class ChatsModule(BaseModule):
         if offset is not None:
             params["offset"] = offset
 
-        return self.get(f"/api/{session}/chats", params=params if params else None)
+        return await self.get(f"/api/{session}/chats", params=params if params else None)
 
-    def get_overview(self, session: str) -> Dict[str, Any]:
+    async def get_overview(self, session: str) -> dict[str, Any]:
         """
         Get chats overview
 
@@ -56,9 +58,9 @@ class ChatsModule(BaseModule):
 
                 overview = client.chats.get_overview("default")
         """
-        return self.get(f"/api/{session}/chats/overview")
+        return await self.get(f"/api/{session}/chats/overview")
 
-    def get_picture(
+    async def get_picture(
         self, session: str, chat_id: str, accept_json: bool = False
     ) -> Any:
         """
@@ -81,11 +83,11 @@ class ChatsModule(BaseModule):
 
         if accept_json:
             headers = {"Accept": "application/json"}
-            return self.client.request("GET", endpoint, headers=headers)
+            return await self.client.request("GET", endpoint, headers=headers)
 
-        return self.get(endpoint)
+        return await self.get(endpoint)
 
-    def unread(self, session: str, chat_id: str) -> Dict[str, Any]:
+    async def unread(self, session: str, chat_id: str) -> dict[str, Any]:
         """
         Mark chat as unread
 
@@ -101,9 +103,9 @@ class ChatsModule(BaseModule):
 
                 result = client.chats.unread("default", "1234567890@c.us")
         """
-        return self.post(f"/api/{session}/chats/{chat_id}/unread")
+        return await self.post(f"/api/{session}/chats/{chat_id}/unread")
 
-    def archive(self, session: str, chat_id: str) -> Dict[str, Any]:
+    async def archive(self, session: str, chat_id: str) -> dict[str, Any]:
         """
         Archive a chat
 
@@ -119,9 +121,9 @@ class ChatsModule(BaseModule):
 
                 result = client.chats.archive("default", "1234567890@c.us")
         """
-        return self.post(f"/api/{session}/chats/{chat_id}/archive")
+        return await self.post(f"/api/{session}/chats/{chat_id}/archive")
 
-    def unarchive(self, session: str, chat_id: str) -> Dict[str, Any]:
+    async def unarchive(self, session: str, chat_id: str) -> dict[str, Any]:
         """
         Unarchive a chat
 
@@ -137,9 +139,9 @@ class ChatsModule(BaseModule):
 
                 result = client.chats.unarchive("default", "1234567890@c.us")
         """
-        return self.post(f"/api/{session}/chats/{chat_id}/unarchive")
+        return await self.post(f"/api/{session}/chats/{chat_id}/unarchive")
 
-    def delete(self, session: str, chat_id: str) -> Dict[str, Any]:
+    async def delete(self, session: str, chat_id: str) -> dict[str, Any]:
         """
         Delete a chat
 
@@ -155,14 +157,14 @@ class ChatsModule(BaseModule):
 
                 result = client.chats.delete("default", "1234567890@c.us")
         """
-        return self.request("DELETE", f"/api/{session}/chats/{chat_id}")
+        return await self.request("DELETE", f"/api/{session}/chats/{chat_id}")
 
-    def read_messages(
+    async def read_messages(
         self,
         session: str,
         chat_id: str,
-        message_ids: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        message_ids: builtins.list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Read messages in a chat
 
@@ -179,21 +181,21 @@ class ChatsModule(BaseModule):
 
                 result = client.chats.read_messages("default", "1234567890@c.us")
         """
-        data: Dict[str, Any] = {}
+        data: dict[str, Any] = {}
         if message_ids:
             data["messageIds"] = message_ids
 
-        return self.post(
+        return await self.post(
             f"/api/{session}/chats/{chat_id}/messages/read", json_data=data
         )
 
-    def get_messages(
+    async def get_messages(
         self,
         session: str,
         chat_id: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         download_media: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> builtins.list[dict[str, Any]]:
         """
         Get messages from a chat
 
@@ -217,14 +219,14 @@ class ChatsModule(BaseModule):
         if download_media:
             params["downloadMedia"] = True
 
-        return self.get(
+        return await self.get(
             f"/api/{session}/chats/{chat_id}/messages",
             params=params if params else None,
         )
 
-    def get_message(
+    async def get_message(
         self, session: str, chat_id: str, message_id: str, download_media: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get a specific message by ID
 
@@ -250,7 +252,7 @@ class ChatsModule(BaseModule):
         if download_media:
             params["downloadMedia"] = True
 
-        return self.get(
+        return await self.get(
             f"/api/{session}/chats/{chat_id}/messages/{message_id}",
             params=params if params else None,
         )

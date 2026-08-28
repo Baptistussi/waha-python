@@ -2,7 +2,9 @@
 Groups module for WAHA Python client
 """
 
-from typing import List, Dict, Any, Optional
+import builtins
+from typing import Any
+
 from ..base_module import BaseModule
 
 
@@ -11,7 +13,7 @@ class GroupsModule(BaseModule):
     Module for managing WhatsApp groups
     """
 
-    def list(self, session: str) -> List[Dict[str, Any]]:
+    async def list(self, session: str) -> list[dict[str, Any]]:
         """
         Get all groups
 
@@ -26,9 +28,9 @@ class GroupsModule(BaseModule):
 
                 groups = client.groups.list("default")
         """
-        return self.get(f"/api/{session}/groups")
+        return await self.client.get(f"/api/{session}/groups")
 
-    def get_count(self, session: str) -> Dict[str, Any]:
+    async def get_count(self, session: str) -> dict[str, Any]:
         """
         Get count of groups
 
@@ -43,9 +45,9 @@ class GroupsModule(BaseModule):
 
                 count = client.groups.get_count("default")
         """
-        return self.get(f"/api/{session}/groups/count")
+        return await self.client.get(f"/api/{session}/groups/count")
 
-    def get(self, session: str, group_id: str) -> Dict[str, Any]:
+    async def get(self, session: str, group_id: str) -> dict[str, Any]:
         """
         Get a specific group
 
@@ -61,11 +63,11 @@ class GroupsModule(BaseModule):
 
                 group = client.groups.get("default", "1234567890@g.us")
         """
-        return self.request("GET", f"/api/{session}/groups/{group_id}")
+        return await self.request("GET", f"/api/{session}/groups/{group_id}")
 
-    def create(
-        self, session: str, subject: str, participants: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+    async def create(
+        self, session: str, subject: str, participants: builtins.list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Create a new group
 
@@ -90,9 +92,9 @@ class GroupsModule(BaseModule):
         if participants:
             data["participants"] = participants
 
-        return self.post(f"/api/{session}/groups", json_data=data)
+        return await self.post(f"/api/{session}/groups", json_data=data)
 
-    def leave(self, session: str, group_id: str) -> Dict[str, Any]:
+    async def leave(self, session: str, group_id: str) -> dict[str, Any]:
         """
         Leave a group
 
@@ -108,11 +110,11 @@ class GroupsModule(BaseModule):
 
                 result = client.groups.leave("default", "1234567890@g.us")
         """
-        return self.post(f"/api/{session}/groups/{group_id}/leave")
+        return await self.post(f"/api/{session}/groups/{group_id}/leave")
 
-    def update_subject(
+    async def update_subject(
         self, session: str, group_id: str, subject: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update group subject (name)
 
@@ -132,11 +134,11 @@ class GroupsModule(BaseModule):
                 )
         """
         data = {"subject": subject}
-        return self.put(f"/api/{session}/groups/{group_id}/subject", json_data=data)
+        return await self.put(f"/api/{session}/groups/{group_id}/subject", json_data=data)
 
-    def update_description(
+    async def update_description(
         self, session: str, group_id: str, description: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Update group description
 
@@ -156,11 +158,11 @@ class GroupsModule(BaseModule):
                 )
         """
         data = {"description": description}
-        return self.put(
+        return await self.put(
             f"/api/{session}/groups/{group_id}/description", json_data=data
         )
 
-    def get_invite_code(self, session: str, group_id: str) -> Dict[str, Any]:
+    async def get_invite_code(self, session: str, group_id: str) -> dict[str, Any]:
         """
         Get group invite code
 
@@ -176,9 +178,9 @@ class GroupsModule(BaseModule):
 
                 code = client.groups.get_invite_code("default", "1234567890@g.us")
         """
-        return self.get(f"/api/{session}/groups/{group_id}/invite-code")
+        return await self.client.get(f"/api/{session}/groups/{group_id}/invite-code")
 
-    def revoke_invite_code(self, session: str, group_id: str) -> Dict[str, Any]:
+    async def revoke_invite_code(self, session: str, group_id: str) -> dict[str, Any]:
         """
         Revoke group invite code
 
@@ -194,9 +196,9 @@ class GroupsModule(BaseModule):
 
                 result = client.groups.revoke_invite_code("default", "1234567890@g.us")
         """
-        return self.post(f"/api/{session}/groups/{group_id}/invite-code/revoke")
+        return await self.post(f"/api/{session}/groups/{group_id}/invite-code/revoke")
 
-    def get_picture(
+    async def get_picture(
         self, session: str, group_id: str, accept_json: bool = False
     ) -> Any:
         """
@@ -219,11 +221,11 @@ class GroupsModule(BaseModule):
 
         if accept_json:
             headers = {"Accept": "application/json"}
-            return self.client.request("GET", endpoint, headers=headers)
+            return await self.client.request("GET", endpoint, headers=headers)
 
-        return self.get(endpoint)
+        return await self.client.get(endpoint)
 
-    def get_participants(self, session: str, group_id: str) -> List[Dict[str, Any]]:
+    async def get_participants(self, session: str, group_id: str) -> builtins.list[dict[str, Any]]:
         """
         Get group participants
 
@@ -239,11 +241,11 @@ class GroupsModule(BaseModule):
 
                 participants = client.groups.get_participants("default", "1234567890@g.us")
         """
-        return self.get(f"/api/{session}/groups/{group_id}/participants")
+        return await self.client.get(f"/api/{session}/groups/{group_id}/participants")
 
-    def add_participants(
-        self, session: str, group_id: str, participants: List[str]
-    ) -> Dict[str, Any]:
+    async def add_participants(
+        self, session: str, group_id: str, participants: builtins.list[str]
+    ) -> dict[str, Any]:
         """
         Add participants to a group
 
@@ -265,13 +267,13 @@ class GroupsModule(BaseModule):
                 )
         """
         data = {"participants": participants}
-        return self.post(
+        return await self.post(
             f"/api/{session}/groups/{group_id}/participants/add", json_data=data
         )
 
-    def remove_participants(
-        self, session: str, group_id: str, participants: List[str]
-    ) -> Dict[str, Any]:
+    async def remove_participants(
+        self, session: str, group_id: str, participants: builtins.list[str]
+    ) -> dict[str, Any]:
         """
         Remove participants from a group
 
@@ -293,13 +295,13 @@ class GroupsModule(BaseModule):
                 )
         """
         data = {"participants": participants}
-        return self.post(
+        return await self.post(
             f"/api/{session}/groups/{group_id}/participants/remove", json_data=data
         )
 
-    def promote_admin(
-        self, session: str, group_id: str, participants: List[str]
-    ) -> Dict[str, Any]:
+    async def promote_admin(
+        self, session: str, group_id: str, participants: builtins.list[str]
+    ) -> dict[str, Any]:
         """
         Promote participants to admin
 
@@ -321,13 +323,13 @@ class GroupsModule(BaseModule):
                 )
         """
         data = {"participants": participants}
-        return self.post(
+        return await self.post(
             f"/api/{session}/groups/{group_id}/admin/promote", json_data=data
         )
 
-    def demote_admin(
-        self, session: str, group_id: str, participants: List[str]
-    ) -> Dict[str, Any]:
+    async def demote_admin(
+        self, session: str, group_id: str, participants: builtins.list[str]
+    ) -> dict[str, Any]:
         """
         Demote participants from admin
 
@@ -349,7 +351,7 @@ class GroupsModule(BaseModule):
                 )
         """
         data = {"participants": participants}
-        return self.post(
+        return await self.post(
             f"/api/{session}/groups/{group_id}/admin/demote", json_data=data
         )
 

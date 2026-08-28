@@ -2,7 +2,8 @@
 Messages module for WAHA Python client
 """
 
-from typing import List, Optional, Dict, Any, Union
+from typing import Any
+
 from ..base_module import BaseModule
 
 
@@ -11,16 +12,16 @@ class MessagesModule(BaseModule):
     Module for sending and receiving WhatsApp messages
     """
 
-    def send_text(
+    async def send_text(
         self,
         session: str,
         chat_id: str,
         text: str,
-        reply_to: Optional[str] = None,
-        mentions: Optional[List[str]] = None,
+        reply_to: str | None = None,
+        mentions: list[str] | None = None,
         link_preview: bool = True,
         link_preview_high_quality: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a text message
 
@@ -45,7 +46,7 @@ class MessagesModule(BaseModule):
                     text="Hello, World!"
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "text": text,
@@ -60,15 +61,15 @@ class MessagesModule(BaseModule):
         if link_preview_high_quality:
             data["linkPreviewHighQuality"] = True
 
-        return self.post("/api/sendText", json_data=data)
+        return await self.post("/api/sendText", json_data=data)
 
-    def send_seen(
+    async def send_seen(
         self,
         session: str,
         chat_id: str,
-        message_ids: Optional[List[str]] = None,
-        participant: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        message_ids: list[str] | None = None,
+        participant: str | None = None,
+    ) -> dict[str, Any]:
         """
         Mark message(s) as seen
 
@@ -89,7 +90,7 @@ class MessagesModule(BaseModule):
                     chat_id="1234567890@c.us"
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
         }
@@ -99,15 +100,15 @@ class MessagesModule(BaseModule):
         if participant:
             data["participant"] = participant
 
-        return self.post("/api/sendSeen", json_data=data)
+        return await self.post("/api/sendSeen", json_data=data)
 
-    def send_image(
+    async def send_image(
         self,
         session: str,
         chat_id: str,
-        file: Union[Dict[str, Any], str],
-        caption: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        file: dict[str, Any] | str,
+        caption: str | None = None,
+    ) -> dict[str, Any]:
         """
         Send an image
 
@@ -146,7 +147,7 @@ class MessagesModule(BaseModule):
                 mimetype = mimetypes.guess_type(file)[0] or "image/jpeg"
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "file": file,
@@ -155,17 +156,17 @@ class MessagesModule(BaseModule):
         if caption:
             data["caption"] = caption
 
-        return self.post("/api/sendImage", json_data=data)
+        return await self.post("/api/sendImage", json_data=data)
 
-    def send_video(
+    async def send_video(
         self,
         session: str,
         chat_id: str,
-        file: Union[Dict[str, Any], str],
-        caption: Optional[str] = None,
+        file: dict[str, Any] | str,
+        caption: str | None = None,
         as_note: bool = False,
         convert: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a video
 
@@ -198,7 +199,7 @@ class MessagesModule(BaseModule):
                 mimetype = mimetypes.guess_type(file)[0] or "video/mp4"
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "file": file,
@@ -211,15 +212,15 @@ class MessagesModule(BaseModule):
         if convert:
             data["convert"] = True
 
-        return self.post("/api/sendVideo", json_data=data)
+        return await self.post("/api/sendVideo", json_data=data)
 
-    def send_voice(
+    async def send_voice(
         self,
         session: str,
         chat_id: str,
-        file: Union[Dict[str, Any], str],
+        file: dict[str, Any] | str,
         convert: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a voice message
 
@@ -250,7 +251,7 @@ class MessagesModule(BaseModule):
                 mimetype = mimetypes.guess_type(file)[0] or "audio/ogg; codecs=opus"
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "file": file,
@@ -259,15 +260,15 @@ class MessagesModule(BaseModule):
         if convert:
             data["convert"] = True
 
-        return self.post("/api/sendVoice", json_data=data)
+        return await self.post("/api/sendVoice", json_data=data)
 
-    def send_file(
+    async def send_file(
         self,
         session: str,
         chat_id: str,
-        file: Union[Dict[str, Any], str],
-        caption: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        file: dict[str, Any] | str,
+        caption: str | None = None,
+    ) -> dict[str, Any]:
         """
         Send a file (document)
 
@@ -298,7 +299,7 @@ class MessagesModule(BaseModule):
                 mimetype = mimetypes.guess_type(file)[0] or "application/octet-stream"
                 file = {"data": data, "mimetype": mimetype, "filename": file}
 
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "file": file,
@@ -307,16 +308,16 @@ class MessagesModule(BaseModule):
         if caption:
             data["caption"] = caption
 
-        return self.post("/api/sendFile", json_data=data)
+        return await self.post("/api/sendFile", json_data=data)
 
-    def send_location(
+    async def send_location(
         self,
         session: str,
         chat_id: str,
         latitude: float,
         longitude: float,
-        title: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        title: str | None = None,
+    ) -> dict[str, Any]:
         """
         Send a location
 
@@ -341,7 +342,7 @@ class MessagesModule(BaseModule):
                     title="Our office"
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "latitude": latitude,
@@ -351,14 +352,14 @@ class MessagesModule(BaseModule):
         if title:
             data["title"] = title
 
-        return self.post("/api/sendLocation", json_data=data)
+        return await self.post("/api/sendLocation", json_data=data)
 
-    def send_contact(
+    async def send_contact(
         self,
         session: str,
         chat_id: str,
-        contacts: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        contacts: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """
         Send contact(s) (vCard)
 
@@ -384,20 +385,20 @@ class MessagesModule(BaseModule):
                     }]
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "contacts": contacts,
         }
 
-        return self.post("/api/sendContactVcard", json_data=data)
+        return await self.post("/api/sendContactVcard", json_data=data)
 
-    def send_poll(
+    async def send_poll(
         self,
         session: str,
         chat_id: str,
-        poll: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        poll: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Send a poll
 
@@ -422,20 +423,20 @@ class MessagesModule(BaseModule):
                     }
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "poll": poll,
         }
 
-        return self.post("/api/sendPoll", json_data=data)
+        return await self.post("/api/sendPoll", json_data=data)
 
-    def forward_message(
+    async def forward_message(
         self,
         session: str,
         chat_id: str,
         message_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Forward a message
 
@@ -456,20 +457,20 @@ class MessagesModule(BaseModule):
                     message_id="false_1234567890@c.us_AAAAAAAAAAAAAAAAAA"
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "messageId": message_id,
         }
 
-        return self.post("/api/forwardMessage", json_data=data)
+        return await self.post("/api/forwardMessage", json_data=data)
 
-    def add_reaction(
+    async def add_reaction(
         self,
         session: str,
         message_id: str,
         reaction: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Add a reaction to a message
 
@@ -498,21 +499,21 @@ class MessagesModule(BaseModule):
                     reaction=""
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "messageId": message_id,
             "reaction": reaction,
         }
 
-        return self.put("/api/reaction", json_data=data)
+        return await self.put("/api/reaction", json_data=data)
 
-    def star_message(
+    async def star_message(
         self,
         session: str,
         chat_id: str,
         message_id: str,
         star: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Star or unstar a message
 
@@ -534,23 +535,23 @@ class MessagesModule(BaseModule):
                     message_id="false_1234567890@c.us_AAAAAAAAAAAAAAAAAA"
                 )
         """
-        data: Dict[str, Any] = {
+        data: dict[str, Any] = {
             "session": session,
             "chatId": chat_id,
             "messageId": message_id,
             "star": star,
         }
 
-        return self.put("/api/star", json_data=data)
+        return await self.put("/api/star", json_data=data)
 
-    def edit_message(
+    async def edit_message(
         self,
         session: str,
         chat_id: str,
         message_id: str,
         text: str,
         link_preview: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Edit a message
 
@@ -574,20 +575,20 @@ class MessagesModule(BaseModule):
                     text="Updated message"
                 )
         """
-        data: Dict[str, Any] = {"text": text}
+        data: dict[str, Any] = {"text": text}
         if not link_preview:
             data["linkPreview"] = False
 
-        return self.put(
+        return await self.put(
             f"/api/{session}/chats/{chat_id}/messages/{message_id}", json_data=data
         )
 
-    def delete_message(
+    async def delete_message(
         self,
         session: str,
         chat_id: str,
         message_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Delete a message
 
@@ -608,16 +609,16 @@ class MessagesModule(BaseModule):
                     message_id="false_1234567890@c.us_AAAAAAAAAAAAAAAAAA"
                 )
         """
-        return self.request(
+        return await self.request(
             "DELETE", f"/api/{session}/chats/{chat_id}/messages/{message_id}"
         )
 
-    def pin_message(
+    async def pin_message(
         self,
         session: str,
         chat_id: str,
         message_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Pin a message
 
@@ -638,16 +639,16 @@ class MessagesModule(BaseModule):
                     message_id="false_1234567890@c.us_AAAAAAAAAAAAAAAAAA"
                 )
         """
-        return self.post(
+        return await self.post(
             f"/api/{session}/chats/{chat_id}/messages/{message_id}/pin"
         )
 
-    def unpin_message(
+    async def unpin_message(
         self,
         session: str,
         chat_id: str,
         message_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Unpin a message
 
@@ -668,7 +669,7 @@ class MessagesModule(BaseModule):
                     message_id="false_1234567890@c.us_AAAAAAAAAAAAAAAAAA"
                 )
         """
-        return self.post(
+        return await self.post(
             f"/api/{session}/chats/{chat_id}/messages/{message_id}/unpin"
         )
 

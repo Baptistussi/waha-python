@@ -2,7 +2,6 @@
 Profile module for WAHA Python client
 """
 
-from typing import Dict, Any
 from ..base_module import BaseModule
 
 
@@ -11,7 +10,7 @@ class ProfileModule(BaseModule):
     Module for managing WhatsApp profile
     """
 
-    def get_picture_url(self, session: str) -> str:
+    async def get_picture_url(self, session: str) -> str:
         """
         Get profile picture URL
 
